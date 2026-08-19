@@ -1,0 +1,7 @@
+FAQ
+
+Password reset can be performed using the Forgot Password option on the login page.
+
+Profile updates can be performed from Account Settings.
+
+Account activation usually takes less than 5 minutes.

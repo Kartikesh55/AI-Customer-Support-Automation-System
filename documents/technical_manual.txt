@@ -1,0 +1,9 @@
+Technical Manual
+
+Application crashes may occur because of:
+- Unsupported file formats
+- Corrupted uploads
+- Outdated application version
+
+Recommended Action:
+Update the application to the latest version.
