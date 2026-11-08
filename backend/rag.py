@@ -2,25 +2,28 @@ from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
+from pathlib import Path
 
 documents = []
 
+DOCUMENTS_DIR = Path(__file__).resolve().parent / "documents"
+
 files = [
-    "documents/pricing_guide.txt",
-    "documents/company_policy.txt",
-    "documents/technical_manual.txt",
-    "documents/faq.txt"
+    DOCUMENTS_DIR / "pricing_guide.txt",
+    DOCUMENTS_DIR / "company_policy.txt",
+    DOCUMENTS_DIR / "technical_manual.txt",
+    DOCUMENTS_DIR / "faq.txt"
 ]
 
 # Load documents and store source information
 for file in files:
 
-    loader = TextLoader(file)
+    loader = TextLoader(str(file))
 
     docs = loader.load()
 
     for doc in docs:
-        doc.metadata["source"] = file
+        doc.metadata["source"] = str(file)
 
     documents.extend(docs)
 
@@ -53,11 +56,14 @@ def retrieve_context(query):
     docs = retriever.invoke(query)
 
     if not docs:
-        return "No relevant information found."
+        return {
+            "source": "unknown",
+            "context": "No relevant information found."
+        }
 
     doc = docs[0]
 
-    source = doc.metadata["source"].split("/")[-1].replace(".txt", "")
+    source = Path(doc.metadata["source"]).stem
 
     return {
         "source": source,

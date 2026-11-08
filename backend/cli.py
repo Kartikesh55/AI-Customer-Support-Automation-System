@@ -1,4 +1,4 @@
-from workflow import app
+from .workflow import app
 
 from rich.console import Console
 from rich.table import Table
@@ -7,7 +7,7 @@ from rich.panel import Panel
 console = Console()
 
 console.print(
-    "\n[bold cyan]AI-Powered Customer Support Automation System[/bold cyan]\n"
+    "\n[bold cyan]ResolveRAG Customer Support[/bold cyan]\n"
 )
 
 customer_name = console.input(
@@ -40,6 +40,16 @@ while True:
             )
         )
 
+        continue
+
+    if result.get("approval_status") == "Declined":
+        console.print(
+            Panel(
+                result["final_response"],
+                title="Request Not Submitted",
+                border_style="yellow"
+            )
+        )
         continue
 
     # ------------------------

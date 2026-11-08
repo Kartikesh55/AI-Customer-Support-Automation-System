@@ -1,17 +1,17 @@
 from langgraph.graph import StateGraph, END
 
-from state import CustomerSupportState
+from .state import CustomerSupportState
 
-from agents import (
+from .agents import (
     sales_agent,
     technical_agent,
     billing_agent,
     account_agent
 )
 
-from rag import retrieve_context
+from .rag import retrieve_context
 
-from memory import (
+from .memory import (
     get_previous_issue,
     save_memory
 )
@@ -132,6 +132,10 @@ console = Console()
 # Human Approval Agent
 def human_node(state):
 
+    approval_status = state.get("approval_status")
+    if approval_status:
+        return {"approval_status": approval_status}
+
     console.print(
         Panel(
             "[bold red]Supervisor Approval Required[/bold red]",
@@ -145,7 +149,7 @@ def human_node(state):
     )
 
     return {
-        "approval_status": choice
+        "approval_status": "Approved" if choice.strip().lower() in {"yes", "y", "approve", "approved"} else "Declined"
     }
 
 # -------------------------
@@ -154,6 +158,12 @@ def human_node(state):
 
 # Supervisor Agent
 def supervisor_node(state):
+
+    if state.get("approval_required") and state.get("approval_status") != "Approved":
+        return {
+            "final_response":
+            "Approval was declined. No request was submitted or processed."
+        }
 
     approval = ""
 
@@ -174,12 +184,23 @@ def supervisor_node(state):
 
 def save_node(state):
 
-    save_memory(
-        state["customer_name"],
-        state["query"]
+    approval_status = state.get("approval_status", "")
+    declined = state.get("approval_required") and approval_status != "Approved"
+    request_id = save_memory(
+        customer_name=state["customer_name"],
+        query=state["query"],
+        request_id=state.get("request_id"),
+        response=state.get("final_response", ""),
+        retrieved_context="" if declined else state.get("retrieved_context", ""),
+        memory_context="" if declined else state.get("memory_context", ""),
+        intent=state.get("intent", ""),
+        department=state.get("department", ""),
+        status="declined" if declined else "completed",
+        approval_required=state.get("approval_required", False),
+        approval_status=approval_status,
     )
 
-    return {}
+    return {"request_id": request_id}
 
 
 # -------------------------
@@ -272,6 +293,6 @@ graph.add_edge("human", "supervisor")
 graph.add_edge("supervisor", "save")
 
 graph.add_edge("save", END)
-graph.add_edge("memory", END)
+graph.add_edge("memory", "save")
 
 app = graph.compile()

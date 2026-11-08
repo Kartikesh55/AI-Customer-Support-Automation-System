@@ -1,138 +1,86 @@
-# AI-Powered Customer Support Automation System
+# ResolveRAG Customer Support
 
-## Project Overview
+ResolveRAG is an AI-powered customer support workspace with a React interface
+and a Python support workflow. The backend classifies requests, retrieves
+relevant company information, routes requests to a support department, and
+stores conversation history in SQLite. Requests that need review are surfaced
+for approval.
+The interface includes searchable conversation history, an expandable company
+knowledge base, profile settings, and a persistent dark-mode toggle.
 
-The **AI-Powered Customer Support Automation System** is an intelligent customer support application developed using **LangGraph**, **LangChain**, **FAISS**, and **SQLite**.
-
-The system automates the handling of customer support requests by identifying the user's intent, routing the query to the appropriate support department, retrieving relevant information from company documents using Retrieval-Augmented Generation (RAG), maintaining customer interaction history using SQLite memory, and supporting human approval for high-risk requests.
-
----
-
-# Features
-
-* Intent Classification
-* Agent Routing using LangGraph
-* Sales Support Agent
-* Technical Support Agent
-* Billing Support Agent
-* Account Support Agent
-* Retrieval-Augmented Generation (RAG)
-* FAISS Vector Search
-* HuggingFace Embeddings
-* SQLite-based Conversation Memory
-* Human-in-the-Loop Approval
-* Supervisor Agent
-* Final Response Generation
-* Rich Terminal UI
-
----
-
-# Technologies Used
-
-* Python 3.x
-* LangGraph
-* LangChain
-* FAISS Vector Database
-* HuggingFace Embeddings
-* SQLite
-* Rich
-
----
-
-# Project Structure
+## Project layout
 
 ```text
-Customer Support Automation System/
-│
-├── app.py
-├── workflow.py
-├── agents.py
-├── rag.py
-├── memory.py
-├── state.py
-├── requirements.txt
-├── README.md
-├── memory.db
-│
-├── documents/
-│   ├── company_policy.txt
-│   ├── pricing_guide.txt
-│   ├── technical_manual.txt
-│   └── faq.txt
-│
-├── screenshots/
-│
-└── workflow_diagram.png
+backend/
+  app.py                 FastAPI endpoints and React static-file serving
+  workflow.py            LangGraph support workflow
+  agents.py              Department support agents
+  rag.py                 Company knowledge-base retrieval
+  memory.py              SQLite conversation history
+  state.py               Workflow state
+  cli.py                 Optional terminal interface
+  documents/             Company policies, FAQ, pricing, and technical docs
+  requirements.txt       Python workflow dependencies
+  requirements-web.txt   Web API dependency and base requirements
+frontend/
+  src/                   React application and styles
+  package.json           Frontend dependencies and scripts
+memory.db                SQLite conversation history
+workflow_diagram.png     Support workflow diagram
+```
 
-# Workflow
+## Run the web application
 
-1. Customer enters a support query.
-2. Intent Classification identifies the query category.
-3. LangGraph routes the request to the appropriate support department.
-4. Relevant company documents are retrieved using the RAG pipeline.
-5. The selected support agent prepares a response.
-6. High-risk requests are sent for human approval.
-7. Customer queries are stored in SQLite memory.
-8. Previous interactions can be recalled from memory.
-9. The Supervisor Agent generates the final customer response.
+Use Python 3.10+ and Node.js 18+.
 
----
+1. Install the Python and frontend dependencies:
 
-# Human-in-the-Loop Requests
+   ```powershell
+   python -m pip install -r backend/requirements-web.txt
+   cd frontend
+   npm install
+   npm run build
+   cd ..
+   ```
 
-The following requests require supervisor approval:
+2. Start the API and serve the built React app:
 
-- Refund Requests
-- Subscription Cancellation
-- Account Closure
-- Compensation Requests
-- Management Escalation
+   ```powershell
+   python -m uvicorn backend.app:api --reload
+   ```
 
----
+3. Open <http://127.0.0.1:8000>.
 
-# Knowledge Base Documents
+For frontend development with hot reload, start the FastAPI backend in one
+terminal and run `npm run dev` from `frontend` in another. The frontend is
+available at <http://localhost:5174/> and Vite proxies `/api` requests to the
+backend at `http://127.0.0.1:8000`.
 
-The RAG pipeline retrieves information from:
+The first backend start may download the Hugging Face sentence-transformer
+model used to create the in-memory FAISS index. The backend reads its knowledge
+base from `backend/documents/` and its conversation history from `memory.db`.
 
-- Company Policy
-- Pricing Guide
-- Technical Manual
-- FAQ Document
+## Support workflow
 
-The documents are stored in the `documents/` directory.
+1. The customer submits a request in the React workspace.
+2. The API classifies the request and routes it through the LangGraph workflow.
+3. The RAG pipeline retrieves context from the company documents.
+4. The selected department agent prepares a response.
+5. Requests requiring review pause for an approval decision.
+6. The answer displays the retrieved company information and its source.
+7. Completed support conversations are saved to SQLite and shown in recent
+   activity.
 
----
+The workspace has separate Overview, Conversations, and Knowledge base pages.
+Approval requests are stored until a reviewer approves or declines them; a
+declined request is recorded without running the support workflow.
+The API also exposes `/api/health`, `/api/overview`, `/api/conversations`,
+`/api/knowledge-base`, and `/api/support`.
 
-# RAG Pipeline
+## Optional terminal interface
 
-The system uses Retrieval-Augmented Generation to retrieve relevant information from the knowledge base.
+Run the original Rich terminal experience from the repository root:
 
-The process is:
-
-```text
-Company Documents
-      ↓
-Document Loading
-       ↓
-Text Splitting
-       ↓
-HuggingFace Embeddings
-       ↓
-FAISS Vector Store
-       ↓
-Relevant Context Retrieval
-       ↓
-Support Agent
-
-Future Improvements: 
-LLM-based Intent Classification
-Web-based User Interface
-Email Notification Support
-Multi-user Authentication
-Cloud Database Integration
-Live Customer Support Dashboard
-CRM Integration
-External Ticketing System Integration
-
-Author:
-Kartikesh
+```powershell
+python -m backend.cli
+```
